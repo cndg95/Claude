@@ -174,7 +174,7 @@ const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
 const strip=o=>{const c={...o};delete c.id;return c};
 const REP={none:'Does not repeat',daily:'Every day',weekdays:'Every weekday (Mon–Fri)',weekly:'Every week'};
 const isRep=b=>b.repeat&&b.repeat!=='none';
-const onDay=(b,k)=>{if(!isRep(b))return b.date===k;if(k<b.date||(b.until&&k>b.until)||(b.skip||[]).includes(k))return false;const w=parse(k).getDay();return b.repeat==='daily'||(b.repeat==='weekdays'&&w>0&&w<6)||(b.repeat==='weekly'&&w===parse(b.date).getDay())};
+const onDay=(b,k)=>{if(!isRep(b))return b.date===k;if((b.until&&k>b.until)||(b.skip||[]).includes(k))return false;const w=parse(k).getDay();return b.repeat==='daily'||(b.repeat==='weekdays'&&w>0&&w<6)||(b.repeat==='weekly'&&w===parse(b.date).getDay())};
 
 let db=null, blocks=[], mode='day', cur=TODAY, drag=false, pending=false, needScroll=true;
 
