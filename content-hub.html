@@ -1,0 +1,496 @@
+<title>Content Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&display=swap">
+<style>
+/* Layout: header + KPI strip, then a month calendar beside a day/goals rail, then analytics, then the idea bank. */
+:root{
+  --bg:#faf6fc; --surface:#ffffff; --surface2:#f5eefa; --ink:#3b3249; --muted:#7c7290; --line:#eadff2;
+  --accent:#9a7fd6; --accent-ink:#ffffff; --accent-soft:#e9defa; --focus:#6f55b8;
+  --edu-bg:#e4d9fb; --edu-fg:#5a3fa0;
+  --bts-bg:#fbd3df; --bts-fg:#9d3a5a;
+  --life-bg:#cfeadb; --life-fg:#2d6a4a;
+  --promo-bg:#fde0c6; --promo-fg:#935217;
+  --comm-bg:#cde5f7; --comm-fg:#27608f;
+  --good:#2d6a4a; --shadow:0 1px 2px rgba(90,63,160,.06),0 8px 24px rgba(90,63,160,.06);
+  --font-display:'Fraunces',Georgia,serif; --font-body:'DM Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1c1824; --surface:#262031; --surface2:#2f2840; --ink:#f0eaf8; --muted:#a79cbb; --line:#3a3250;
+  --accent:#b69cf0; --accent-ink:#1c1824; --accent-soft:#3b3257; --focus:#cdbcff;
+  --edu-bg:#43376b; --edu-fg:#dccfff; --bts-bg:#613248; --bts-fg:#ffd0de; --life-bg:#2c4f3d; --life-fg:#c4f0d6;
+  --promo-bg:#684425; --promo-fg:#ffdcbb; --comm-bg:#2b4a66; --comm-fg:#c6e4fb; --good:#8fdcb2;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1824; --surface:#262031; --surface2:#2f2840; --ink:#f0eaf8; --muted:#a79cbb; --line:#3a3250;
+  --accent:#b69cf0; --accent-ink:#1c1824; --accent-soft:#3b3257; --focus:#cdbcff;
+  --edu-bg:#43376b; --edu-fg:#dccfff; --bts-bg:#613248; --bts-fg:#ffd0de; --life-bg:#2c4f3d; --life-fg:#c4f0d6;
+  --promo-bg:#684425; --promo-fg:#ffdcbb; --comm-bg:#2b4a66; --comm-fg:#c6e4fb; --good:#8fdcb2;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--font-display);font-weight:500;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,42px);line-height:1.1}
+h1 em{color:var(--accent);font-style:italic}
+h2{font-size:22px}
+h3{font-size:17px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow);min-width:0}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 16px;font-weight:500;font-size:14px}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(.95)}
+.btn.small{padding:4px 12px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.danger{color:var(--bts-fg)}
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--accent-soft);border-radius:14px;padding:10px 16px;font-size:14px}
+.banner[hidden]{display:none}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.kpi{padding:16px 18px}
+.kpi .v{font-family:var(--font-display);font-size:30px;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:13px;color:var(--muted)}
+.kpi .d b{color:var(--good);font-weight:500}
+
+/* Main grid */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.rail{display:flex;flex-direction:column;gap:24px;min-width:0}
+@media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
+
+/* Calendar */
+.cal-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.cal-nav{display:flex;gap:6px;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:4px}
+.cell{min-height:104px;background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:6px;display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0;cursor:pointer}
+.cell:hover{border-color:var(--accent)}
+.cell.out{background:transparent;border:1px dashed var(--line);opacity:.55}
+.cell.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.cell .n{font-size:12px;font-weight:500;color:var(--muted);align-self:flex-start;min-width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.cell.today .n{background:var(--accent);color:var(--accent-ink)}
+.chip{display:block;width:100%;border:0;border-radius:8px;padding:2px 6px;font-size:12px;line-height:1.35;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.idea{background:transparent!important;border:1px dashed currentColor}
+.more{font-size:11px;color:var(--muted);padding-left:4px}
+.p-educational{background:var(--edu-bg);color:var(--edu-fg)}
+.p-bts{background:var(--bts-bg);color:var(--bts-fg)}
+.p-lifestyle{background:var(--life-bg);color:var(--life-fg)}
+.p-promo{background:var(--promo-bg);color:var(--promo-fg)}
+.p-community{background:var(--comm-bg);color:var(--comm-fg)}
+@media (max-width:640px){
+  .grid{gap:3px}
+  .cell{min-height:58px;padding:4px;align-items:center}
+  .cell .n{align-self:center}
+  .chip{height:7px;padding:0;font-size:0;border-radius:4px}
+  .more{display:none}
+}
+
+/* Day panel */
+.post{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;text-align:left;border:0;width:100%}
+.post .t{font-weight:700;font-size:15px}
+.post .m{font-size:13px;opacity:.9;display:flex;flex-wrap:wrap;gap:4px 10px}
+.post .c{font-size:13px;opacity:.9;white-space:pre-wrap}
+.list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pill{font-size:12px;border-radius:999px;padding:1px 9px;border:1px solid currentColor;font-weight:500}
+.pill.Idea{border-style:dashed}
+.pill.Posted{background:var(--surface);color:var(--good)}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:16px;color:var(--muted);font-size:14px}
+
+/* Goals */
+.goal{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.goal:first-child{border-top:0}
+.goal .row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.bar{height:10px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+.goal.done .bar i{background:var(--good)}
+.goal input{width:84px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:2px 8px;font-variant-numeric:tabular-nums}
+.goal .sub{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted)}
+
+/* Analytics */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 14px;font-size:14px}
+.tab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.an{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px;margin-top:14px}
+@media (max-width:820px){.an{grid-template-columns:minmax(0,1fr)}}
+svg{display:block;width:100%;height:auto}
+.axis{fill:var(--muted);font-size:11px;font-family:var(--font-body)}
+.readout{font-size:13px;color:var(--muted);min-height:20px;margin-bottom:4px}
+.readout b{color:var(--ink);font-weight:500}
+.mix{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.mix .r{display:grid;grid-template-columns:120px 1fr 28px;gap:10px;align-items:center;font-size:13px}
+.mix .bar{height:12px}
+.mix .bar i{border-radius:999px}
+
+/* Ideas */
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px}
+.idea-card{border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.idea-card .t{font-weight:700}
+.idea-card .m{font-size:13px;opacity:.9}
+.idea-card .acts{display:flex;gap:6px;margin-top:auto}
+.idea-card .btn{background:var(--surface);color:var(--ink)}
+.add{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.add input[type=text]{flex:1 1 220px;min-width:0}
+input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;min-width:0;width:100%}
+.add input,.add select{width:auto}
+
+/* Modal */
+.ov{position:fixed;inset:0;background:rgba(40,28,60,.45);display:grid;place-items:center;padding:16px;z-index:50}
+.ov[hidden]{display:none}
+.modal{background:var(--surface);border-radius:22px;padding:22px;width:min(480px,100%);max-height:92vh;overflow:auto;box-shadow:var(--shadow);border:1px solid var(--line)}
+.modal form{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.modal label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fact{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;z-index:60}
+.toast[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <div class="eyebrow">Instagram planner</div>
+      <h1>Content <em>Hub</em></h1>
+    </div>
+    <div class="muted" id="today-label"></div>
+  </header>
+
+  <div class="banner" id="sample-banner" hidden>
+    <span>You're looking at sample content and numbers. Edit anything, or clear it all and start fresh.</span>
+    <button class="btn small" data-act="clear-sample" type="button">Clear sample data</button>
+  </div>
+  <div class="banner" id="status-note" hidden></div>
+
+  <section class="kpis" id="kpis" aria-label="Instagram snapshot"></section>
+
+  <div class="main">
+    <section class="card" aria-label="Content calendar">
+      <div class="cal-head">
+        <h2 id="month-title"></h2>
+        <div class="cal-nav">
+          <button class="btn small" data-act="prev" type="button" aria-label="Previous month">‹</button>
+          <button class="btn small" data-act="this-month" type="button">Today</button>
+          <button class="btn small" data-act="next" type="button" aria-label="Next month">›</button>
+          <button class="btn small primary" data-act="new-post" type="button">+ New post</button>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="grid" id="cal"></div>
+    </section>
+
+    <div class="rail">
+      <section class="card" aria-label="Posts for the selected day">
+        <div class="eyebrow" id="day-eyebrow"></div>
+        <h3 id="day-title"></h3>
+        <div class="list" id="day"></div>
+      </section>
+      <section class="card" aria-label="Goals">
+        <div class="head" style="align-items:center">
+          <h3>Goals</h3>
+          <button class="btn small" data-act="new-goal" type="button">+ Add goal</button>
+        </div>
+        <div id="goals"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card" aria-label="Analytics">
+    <div class="head" style="align-items:center">
+      <div>
+        <div class="eyebrow">Analytics</div>
+        <h2>How the account is growing</h2>
+      </div>
+      <div class="cal-nav">
+        <div class="tabs" id="metric-tabs" role="group" aria-label="Metric"></div>
+        <button class="btn small primary" data-act="log-stats" type="button">+ Log this week</button>
+      </div>
+    </div>
+    <div class="an">
+      <div>
+        <div class="readout" id="readout"></div>
+        <div id="chart"></div>
+      </div>
+      <div>
+        <h3>Content mix</h3>
+        <div class="muted" style="font-size:13px" id="mix-sub"></div>
+        <div class="mix" id="mix"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-label="Idea bank">
+    <div class="eyebrow">Idea bank</div>
+    <h2>Ideas waiting for a date</h2>
+    <form class="add" id="idea-form">
+      <input type="text" id="idea-title" placeholder="Jot down an idea…" aria-label="Idea" required>
+      <select id="idea-pillar" aria-label="Pillar"></select>
+      <select id="idea-format" aria-label="Format"></select>
+      <button class="btn primary" type="submit">Add idea</button>
+    </form>
+    <div class="ideas" id="ideas"></div>
+  </section>
+</div>
+
+<div class="ov" id="ov" hidden><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const PILLARS={educational:'Educational',bts:'Behind the scenes',lifestyle:'Lifestyle',promo:'Promo',community:'Community'};
+const FORMATS=['Reel','Carousel','Story','Photo'];
+const STATUSES=['Idea','Drafted','Scheduled','Posted'];
+const METRICS={followers:{label:'Followers',fmt:v=>v.toLocaleString('en-US')},reach:{label:'Reach',fmt:v=>v.toLocaleString('en-US')},engagement:{label:'Engagement rate',fmt:v=>v.toFixed(1)+'%'}};
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
+const now=new Date();
+const TODAY=iso(now.getFullYear(),now.getMonth(),now.getDate());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const longDate=s=>parse(s).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+const shortDate=s=>parse(s).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+let db=null, posts=[], ideas=[], goals=[], stats=[];
+let view={y:now.getFullYear(),m:now.getMonth()}, selected=TODAY, metric='followers';
+
+$('today-label').textContent=longDate(TODAY);
+$('legend').innerHTML=Object.entries(PILLARS).map(([k,v])=>`<span><i class="dot p-${k}"></i>${v}</span>`).join('');
+const opts=(arr,sel)=>arr.map(a=>{const [v,l]=Array.isArray(a)?a:[a,a];return `<option value="${esc(v)}"${v===sel?' selected':''}>${esc(l)}</option>`}).join('');
+$('idea-pillar').innerHTML=opts(Object.entries(PILLARS));
+$('idea-format').innerHTML=opts(FORMATS);
+
+/* ---------- storage ---------- */
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3200)}
+async function save(coll,id,data){
+  if(!db){toast('Saving is unavailable here. Open the page signed in to keep changes.');return false}
+  try{ if(id) await db.collection(coll).doc(id).set(data); else await db.collection(coll).add(data); return true }
+  catch(e){toast('Could not save: '+(e&&e.message||'try again')); return false}
+}
+async function remove(coll,id){
+  if(!db) return false;
+  try{await db.collection(coll).doc(id).delete();return true}catch(e){toast('Could not delete: '+(e&&e.message||'try again'));return false}
+}
+const strip=o=>{const c={...o};delete c.id;return c};
+
+function listen(name,set){
+  db.collection(name).onSnapshot(s=>{set(s.docs.map(d=>({id:d.id,...d.data()})));renderAll()},
+    e=>{showNote('Live updates stopped ('+(e&&e.code||'error')+'). Reload to reconnect.')});
+}
+function showNote(t){const n=$('status-note');n.textContent=t;n.hidden=!t}
+
+/* ---------- render ---------- */
+function renderAll(){renderKpis();renderCal();renderDay();renderGoals();renderMetricTabs();renderChart();renderMix();renderIdeas();
+  $('sample-banner').hidden=![...posts,...ideas,...goals,...stats].some(x=>x.sample)}
+
+function sortedStats(){return [...stats].sort((a,b)=>a.date<b.date?-1:1)}
+function renderKpis(){
+  const s=sortedStats(), last=s[s.length-1], prev=s[s.length-2];
+  const delta=(k,pct)=>{ if(!last||!prev) return '<span class="d">Log two weeks to see change</span>';
+    const d=last[k]-prev[k]; const txt=k==='engagement'?(d>=0?'+':'')+d.toFixed(1)+' pts':(d>=0?'+':'')+d.toLocaleString('en-US');
+    return `<span class="d"><b>${txt}</b> vs last week</span>`};
+  const monthPosts=posts.filter(p=>p.date.startsWith(view.y+'-'+pad(view.m+1)));
+  const done=monthPosts.filter(p=>p.status==='Posted').length;
+  const tile=(label,val,sub)=>`<div class="card kpi"><div class="eyebrow">${label}</div><div class="v">${val}</div>${sub}</div>`;
+  $('kpis').innerHTML=
+    tile('Followers',last?METRICS.followers.fmt(last.followers):'–',delta('followers'))+
+    tile('Weekly reach',last?METRICS.reach.fmt(last.reach):'–',delta('reach'))+
+    tile('Engagement rate',last?METRICS.engagement.fmt(last.engagement):'–',delta('engagement'))+
+    tile('Posted in '+MONTHS[view.m],done+' <span class="muted" style="font-size:16px">of '+monthPosts.length+'</span>','<span class="d">posts planned this month</span>');
+}
+
+function postsOn(d){return posts.filter(p=>p.date===d).sort((a,b)=>(a.time||'')<(b.time||'')?-1:1)}
+function chipHtml(p){return `<button type="button" class="chip p-${esc(p.pillar)}${p.status==='Idea'?' idea':''}" data-act="edit-post" data-id="${esc(p.id)}" title="${esc(p.title)} · ${esc(p.format)} · ${esc(p.status)}">${esc(p.format)} · ${esc(p.title)}</button>`}
+function renderCal(){
+  $('month-title').textContent=MONTHS[view.m]+' '+view.y;
+  const first=new Date(view.y,view.m,1), off=(first.getDay()+6)%7, days=new Date(view.y,view.m+1,0).getDate();
+  const total=Math.ceil((off+days)/7)*7; let h=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<total;i++){
+    const dt=new Date(view.y,view.m,1-off+i), key=iso(dt.getFullYear(),dt.getMonth(),dt.getDate()), out=dt.getMonth()!==view.m;
+    const ps=postsOn(key);
+    h+=`<div class="cell${out?' out':''}${key===TODAY?' today':''}${key===selected?' sel':''}" data-act="pick-day" data-date="${key}" role="button" tabindex="0" aria-label="${esc(longDate(key))}, ${ps.length} posts">
+      <span class="n">${dt.getDate()}</span>${ps.slice(0,3).map(chipHtml).join('')}${ps.length>3?`<span class="more">+${ps.length-3} more</span>`:''}</div>`;
+  }
+  $('cal').innerHTML=h;
+}
+
+function postCard(p){
+  return `<button type="button" class="post p-${esc(p.pillar)}" data-act="edit-post" data-id="${esc(p.id)}">
+    <span class="t">${esc(p.title)}</span>
+    <span class="m"><span>${esc(p.format)}</span><span>${esc(PILLARS[p.pillar]||'')}</span>${p.time?`<span>${esc(p.time)}</span>`:''}<span class="pill ${esc(p.status)}">${esc(p.status)}</span></span>
+    ${p.caption?`<span class="c">${esc(p.caption)}</span>`:''}</button>`;
+}
+function renderDay(){
+  $('day-eyebrow').textContent=selected===TODAY?'Today':'Selected day';
+  $('day-title').textContent=longDate(selected);
+  const ps=postsOn(selected);
+  let h=ps.length?ps.map(postCard).join(''):'<div class="empty">Nothing planned for this day yet.</div>';
+  h+=`<button class="btn small" type="button" data-act="new-post" data-date="${selected}">+ Add a post for this day</button>`;
+  const up=posts.filter(p=>p.date>selected&&p.status!=='Posted').sort((a,b)=>a.date+(a.time||'')<b.date+(b.time||'')?-1:1).slice(0,3);
+  if(up.length) h+=`<div class="eyebrow" style="margin-top:8px">Up next</div>`+up.map(p=>`<button type="button" class="post p-${esc(p.pillar)}" data-act="edit-post" data-id="${esc(p.id)}"><span class="t">${esc(p.title)}</span><span class="m"><span>${esc(shortDate(p.date))}</span><span>${esc(p.format)}</span><span class="pill ${esc(p.status)}">${esc(p.status)}</span></span></button>`).join('');
+  $('day').innerHTML=h;
+}
+
+function renderGoals(){
+  if(!goals.length){$('goals').innerHTML='<div class="empty" style="margin-top:12px">Add a target such as “6,000 followers” or “8 Reels a month”.</div>';return}
+  $('goals').innerHTML=goals.slice().sort((a,b)=>(a.created||0)-(b.created||0)).map(g=>{
+    const pct=Math.max(0,Math.min(100,g.target?g.current/g.target*100:0));
+    return `<div class="goal${pct>=100?' done':''}">
+      <div class="row"><strong>${esc(g.title)}</strong><span class="muted" style="font-variant-numeric:tabular-nums">${Math.round(pct)}%</span></div>
+      <div class="bar" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(g.title)}"><i style="width:${pct}%"></i></div>
+      <div class="sub"><span>Now <input type="number" step="any" value="${esc(g.current)}" data-goal="${esc(g.id)}" aria-label="Current value for ${esc(g.title)}"> of ${esc(Number(g.target).toLocaleString('en-US'))} ${esc(g.unit||'')}</span>
+      <span><button class="btn ghost small" data-act="edit-goal" data-id="${esc(g.id)}" type="button">Edit</button></span></div></div>`}).join('');
+}
+
+function renderMetricTabs(){
+  $('metric-tabs').innerHTML=Object.entries(METRICS).map(([k,v])=>`<button type="button" class="tab" data-act="metric" data-k="${k}" aria-pressed="${k===metric}">${v.label}</button>`).join('');
+}
+function niceTicks(min,max,n){const span=max-min||1, raw=span/n, mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw); const lo=Math.floor(min/step)*step, hi=Math.ceil(max/step)*step; const t=[];
+  for(let v=lo;v<=hi+1e-9;v+=step)t.push(+v.toFixed(6)); return t}
+function renderChart(){
+  const s=sortedStats(); const el=$('chart');
+  if(!s.length){el.innerHTML='<div class="empty">No numbers yet. Use “Log this week” to add followers, reach and engagement.</div>';$('readout').innerHTML='';return}
+  const W=640,H=230,L=48,R=16,T=14,B=30, vals=s.map(x=>x[metric]);
+  const ticks=niceTicks(Math.min(...vals),Math.max(...vals),4), lo=ticks[0], hi=ticks[ticks.length-1];
+  const X=i=>s.length===1?(L+W-R)/2:L+(W-L-R)*i/(s.length-1), Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo||1));
+  const f=METRICS[metric].fmt; let g='';
+  ticks.forEach(t=>{g+=`<line x1="${L}" x2="${W-R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)" stroke-width="1"/><text class="axis" x="${L-8}" y="${Y(t)+4}" text-anchor="end">${metric==='engagement'?t.toFixed(1):(t>=1000?(t/1000).toFixed(t%1000?1:0)+'k':t)}</text>`});
+  const step=Math.ceil(s.length/6);
+  s.forEach((p,i)=>{ if(i%step===0||i===s.length-1) g+=`<text class="axis" x="${X(i)}" y="${H-8}" text-anchor="middle">${shortDate(p.date)}</text>`});
+  let body;
+  if(metric==='reach'){
+    const bw=Math.min(36,(W-L-R)/s.length*0.6);
+    body=s.map((p,i)=>{const y=Y(p[metric]),h=Y(lo)-y;const last=i===s.length-1;
+      return `<path d="M${X(i)-bw/2},${Y(lo)}V${y+4}Q${X(i)-bw/2},${y} ${X(i)-bw/2+4},${y}H${X(i)+bw/2-4}Q${X(i)+bw/2},${y} ${X(i)+bw/2},${y+4}V${Y(lo)}Z" fill="var(--accent)" opacity="${last?1:.55}"/>`}).join('');
+  }else{
+    const pts=s.map((p,i)=>X(i)+','+Y(p[metric])).join(' ');
+    body=`<polygon points="${X(0)},${Y(lo)} ${pts} ${X(s.length-1)},${Y(lo)}" fill="var(--accent)" opacity=".14"/>
+      <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`+
+      s.map((p,i)=>i===s.length-1?`<circle cx="${X(i)}" cy="${Y(p[metric])}" r="5.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`:'').join('');
+  }
+  const hit=s.map((p,i)=>{const w=(W-L-R)/Math.max(1,s.length-1);return `<rect x="${X(i)-w/2}" y="${T}" width="${w}" height="${H-T-B}" fill="transparent" data-hover="${i}"/>`}).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${METRICS[metric].label} by week">${g}${body}${hit}</svg>`;
+  const ro=i=>{const p=s[i];$('readout').innerHTML=`<b>${f(p[metric])}</b> ${METRICS[metric].label.toLowerCase()} · week of ${shortDate(p.date)}`};
+  ro(s.length-1);
+  el.querySelectorAll('[data-hover]').forEach(r=>r.addEventListener('mouseenter',()=>ro(+r.dataset.hover)));
+  el.querySelector('svg').addEventListener('mouseleave',()=>ro(s.length-1));
+}
+
+function renderMix(){
+  const mp=posts.filter(p=>p.date.startsWith(view.y+'-'+pad(view.m+1)));
+  $('mix-sub').textContent='Posts planned in '+MONTHS[view.m]+', by pillar';
+  const max=Math.max(1,...Object.keys(PILLARS).map(k=>mp.filter(p=>p.pillar===k).length));
+  $('mix').innerHTML=Object.entries(PILLARS).map(([k,v])=>{const n=mp.filter(p=>p.pillar===k).length;
+    return `<div class="r"><span>${v}</span><div class="bar"><i class="p-${k}" style="width:${n/max*100}%;background:var(--${{educational:'edu',bts:'bts',lifestyle:'life',promo:'promo',community:'comm'}[k]}-fg)"></i></div><span style="font-variant-numeric:tabular-nums;text-align:right">${n}</span></div>`}).join('');
+}
+
+function renderIdeas(){
+  $('ideas').innerHTML=ideas.length?ideas.slice().sort((a,b)=>(b.created||0)-(a.created||0)).map(i=>`<div class="idea-card p-${esc(i.pillar)}">
+    <div class="t">${esc(i.title)}</div><div class="m">${esc(i.format)} · ${esc(PILLARS[i.pillar]||'')}</div>
+    <div class="acts"><button class="btn small" type="button" data-act="schedule" data-id="${esc(i.id)}">Pick a date</button><button class="btn small danger" type="button" data-act="del-idea" data-id="${esc(i.id)}" aria-label="Delete idea">Delete</button></div></div>`).join('')
+    :'<div class="empty" style="grid-column:1/-1">No ideas yet. Type one above and it lands here until you give it a date.</div>';
+}
+
+/* ---------- modal ---------- */
+let onEsc=null;
+function openModal(html){ $('modal').innerHTML=html; $('ov').hidden=false; const f=$('modal').querySelector('input,select,textarea'); if(f) f.focus(); }
+function closeModal(){$('ov').hidden=true;$('modal').innerHTML=''}
+$('ov').addEventListener('mousedown',e=>{if(e.target===$('ov'))closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ov').hidden)closeModal();
+  if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('cell')){e.preventDefault();e.target.click()}});
+
+function postForm(p,opts){
+  const isNew=!p.id;
+  openModal(`<h2 id="modal-title">${isNew?'New post':'Edit post'}</h2>
+  <form id="f">
+    <label>What are you posting<input type="text" name="title" value="${esc(p.title||'')}" required></label>
+    <div class="frow"><label>Date<input type="date" name="date" value="${esc(p.date||selected)}" required></label><label>Time<input type="time" name="time" value="${esc(p.time||'12:00')}"></label></div>
+    <div class="frow"><label>Pillar<select name="pillar">${opts_(Object.entries(PILLARS),p.pillar||'educational')}</select></label><label>Format<select name="format">${opts_(FORMATS,p.format||'Reel')}</select></label></div>
+    <label>Status<select name="status">${opts_(STATUSES,p.status||'Drafted')}</select></label>
+    <label>Caption / notes<textarea name="caption" rows="4">${esc(p.caption||'')}</textarea></label>
+    <div class="fact">${isNew?'':'<button type="button" class="btn danger" data-act="del-post">Delete</button>'}<button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" type="submit">Save</button></div>
+  </form>`);
+  $('f').addEventListener('submit',async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+    const rec={title:d.title.trim(),date:d.date,time:d.time,pillar:d.pillar,format:d.format,status:d.status,caption:d.caption,sample:false,created:p.created||Date.now()};
+    if(await save('posts',p.id,rec)){ if(opts&&opts.fromIdea) await remove('ideas',opts.fromIdea); selected=rec.date; const dt=parse(rec.date); view={y:dt.getFullYear(),m:dt.getMonth()}; closeModal(); renderAll(); toast('Saved') }});
+  const del=$('modal').querySelector('[data-act="del-post"]'); if(del) del.onclick=async()=>{ if(await remove('posts',p.id)){closeModal();toast('Post deleted')}};
+}
+const opts_=opts;
+
+function goalForm(g){
+  const isNew=!g.id;
+  openModal(`<h2 id="modal-title">${isNew?'New goal':'Edit goal'}</h2><form id="f">
+    <label>Goal<input type="text" name="title" value="${esc(g.title||'')}" placeholder="Reach 6,000 followers" required></label>
+    <div class="frow"><label>Current<input type="number" step="any" name="current" value="${esc(g.current??0)}" required></label><label>Target<input type="number" step="any" min="0" name="target" value="${esc(g.target??'')}" required></label></div>
+    <label>Unit<input type="text" name="unit" value="${esc(g.unit||'')}" placeholder="followers, posts, %"></label>
+    <div class="fact">${isNew?'':'<button type="button" class="btn danger" data-act="del-goal">Delete</button>'}<button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" type="submit">Save</button></div></form>`);
+  $('f').addEventListener('submit',async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+    if(await save('goals',g.id,{title:d.title.trim(),current:+d.current,target:+d.target,unit:d.unit.trim(),sample:false,created:g.created||Date.now()})){closeModal();toast('Saved')}});
+  const del=$('modal').querySelector('[data-act="del-goal"]'); if(del) del.onclick=async()=>{ if(await remove('goals',g.id)){closeModal();toast('Goal deleted')}};
+}
+
+function statsForm(){
+  const last=sortedStats().slice(-1)[0]||{};
+  openModal(`<h2 id="modal-title">Log this week</h2><form id="f">
+    <label>Week of<input type="date" name="date" value="${TODAY}" required></label>
+    <div class="frow"><label>Followers<input type="number" name="followers" min="0" value="${esc(last.followers??'')}" required></label><label>Reach<input type="number" name="reach" min="0" value="${esc(last.reach??'')}" required></label></div>
+    <label>Engagement rate (%)<input type="number" step="0.1" min="0" name="engagement" value="${esc(last.engagement??'')}" required></label>
+    <div class="fact"><button type="button" class="btn" data-act="close">Cancel</button><button class="btn primary" type="submit">Save</button></div></form>`);
+  $('f').addEventListener('submit',async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+    if(await save('stats',d.date,{date:d.date,followers:+d.followers,reach:+d.reach,engagement:+d.engagement,sample:false})){closeModal();toast('Numbers logged')}});
+}
+
+/* ---------- events ---------- */
+$('idea-form').addEventListener('submit',async e=>{e.preventDefault();const t=$('idea-title').value.trim();if(!t)return;
+  if(await save('ideas',null,{title:t,pillar:$('idea-pillar').value,format:$('idea-format').value,sample:false,created:Date.now()})){$('idea-title').value='';toast('Idea added')}});
+
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  const act=el.dataset.act, id=el.dataset.id;
+  if(act==='pick-day'){ if(e.target.closest('.chip')) return; selected=el.dataset.date; const dt=parse(selected); if(dt.getMonth()!==view.m) view={y:dt.getFullYear(),m:dt.getMonth()}; renderAll(); return }
+  if(act==='edit-post'){ e.stopPropagation(); const p=posts.find(x=>x.id===id); if(p) postForm(p); return }
+  if(act==='new-post') return postForm({date:el.dataset.date||selected});
+  if(act==='prev'){view=view.m===0?{y:view.y-1,m:11}:{y:view.y,m:view.m-1};return renderAll()}
+  if(act==='next'){view=view.m===11?{y:view.y+1,m:0}:{y:view.y,m:view.m+1};return renderAll()}
+  if(act==='this-month'){view={y:now.getFullYear(),m:now.getMonth()};selected=TODAY;return renderAll()}
+  if(act==='close') return closeModal();
+  if(act==='new-goal') return goalForm({});
+  if(act==='edit-goal'){const g=goals.find(x=>x.id===id); if(g) goalForm(g); return}
+  if(act==='log-stats') return statsForm();
+  if(act==='metric'){metric=el.dataset.k;renderMetricTabs();return renderChart()}
+  if(act==='schedule'){const i=ideas.find(x=>x.id===id); if(i) postForm({title:i.title,pillar:i.pillar,format:i.format,status:'Drafted',date:selected,caption:i.notes||''},{fromIdea:i.id}); return}
+  if(act==='del-idea'){ if(await remove('ideas',id)) toast('Idea deleted'); return }
+  if(act==='clear-sample'){
+    const all=[['posts',posts],['ideas',ideas],['goals',goals],['stats',stats]];
+    await Promise.all(all.flatMap(([c,a])=>a.filter(x=>x.sample).map(x=>remove(c,x.id)))); toast('Sample data cleared'); return }
+});
+document.addEventListener('change',async e=>{
+  const id=e.target.dataset&&e.target.dataset.goal; if(!id) return;
+  const g=goals.find(x=>x.id===id); const v=parseFloat(e.target.value); if(!g||isNaN(v)) return;
+  await save('goals',id,{...strip(g),current:v,sample:false});
+});
+
+/* ---------- boot ---------- */
+renderAll();
+(async()=>{
+  const c=window.claude; if(!c||!c.use){showNote('Open this page in Claude to save your plans.');return}
+  db=await c.use('db');
+  if(!db){showNote('Sign in to load and save your content plan.');return}
+  const timer=setTimeout(()=>showNote('Still loading your plan. If this stays, the data may be out of date.'),10000);
+  let first=true; const done=()=>{if(first){first=false;clearTimeout(timer);showNote('')}};
+  const wrap=(n,set)=>db.collection(n).onSnapshot(s=>{done();set(s.docs.map(d=>({id:d.id,...d.data()})));renderAll()},e=>{clearTimeout(timer);showNote('Live updates stopped ('+(e&&e.code||'error')+'). Reload to reconnect.')});
+  wrap('posts',a=>posts=a);wrap('ideas',a=>ideas=a);wrap('goals',a=>goals=a);wrap('stats',a=>stats=a);
+})();
+})();
+</script>
