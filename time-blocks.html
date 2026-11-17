@@ -99,8 +99,10 @@ button{cursor:pointer}
 .modal{background:var(--surface);border-radius:22px;padding:22px;width:min(460px,100%);max-height:92vh;overflow:auto;box-shadow:var(--shadow);border:1px solid var(--line)}
 .modal form{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .modal label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
-input[type=text],input[type=date],input[type=time],textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;min-width:0;width:100%}
+input[type=text],input[type=date],input[type=time],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;min-width:0;width:100%}
 .frow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.frow2{grid-template-columns:1fr}}
 @media (max-width:420px){.frow{grid-template-columns:1fr 1fr}.frow label:first-child{grid-column:1/-1}}
 .sws{display:flex;gap:8px;flex-wrap:wrap}
 .sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);padding:0;box-shadow:0 0 0 1px var(--line)}
@@ -170,6 +172,9 @@ const dur=m=>{const h=Math.floor(m/60),r=m%60;return (h?h+'h':'')+(h&&r?' ':'')+
 const longDate=s=>parse(s).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
 const strip=o=>{const c={...o};delete c.id;return c};
+const REP={none:'Does not repeat',daily:'Every day',weekdays:'Every weekday (Mon–Fri)',weekly:'Every week'};
+const isRep=b=>b.repeat&&b.repeat!=='none';
+const onDay=(b,k)=>{if(!isRep(b))return b.date===k;if(k<b.date||(b.until&&k>b.until)||(b.skip||[]).includes(k))return false;const w=parse(k).getDay();return b.repeat==='daily'||(b.repeat==='weekdays'&&w>0&&w<6)||(b.repeat==='weekly'&&w===parse(b.date).getDay())};
 
 let db=null, blocks=[], mode='day', cur=TODAY, drag=false, pending=false, needScroll=true;
 
@@ -207,12 +212,12 @@ function renderAll(){
 }
 function renderDay(){
   $('title').textContent=(cur===TODAY?'Today · ':'')+longDate(cur);
-  const bs=blocks.filter(b=>b.date===cur), total=bs.reduce((a,b)=>a+(b.end-b.start),0);
+  const bs=blocks.filter(b=>onDay(b,cur)), total=bs.reduce((a,b)=>a+(b.end-b.start),0);
   $('hint').textContent=bs.length?bs.length+' block'+(bs.length>1?'s':'')+' · '+dur(total)+' planned':'Nothing planned yet';
   const old=$('scroll'), keep=old?old.scrollTop:null;
   let labels='';for(let i=1;i<24;i++)labels+=`<div class="hl" style="top:${i*H}px">${fmt(i*60)}</div>`;
   const nm=now0.getHours()*60+new Date().getMinutes();
-  const blk=layout(bs).map(b=>`<div class="blk c-${esc(b.color)}${b.end-b.start<=30?' short':''}" role="button" tabindex="0" data-id="${esc(b.id)}" aria-label="${esc(b.title)}, ${fmt(b.start)} to ${fmt(b.end)}" style="top:${b.start/60*H}px;height:${Math.max(14,(b.end-b.start)/60*H-2)}px;left:calc(${b._c*100/b._n}% + 2px);width:calc(${100/b._n}% - 4px)"><div class="bt">${esc(b.title)}</div><div class="bm">${fmt(b.start)} – ${fmt(b.end)}</div><span class="rz" aria-hidden="true"></span></div>`).join('');
+  const blk=layout(bs).map(b=>`<div class="blk c-${esc(b.color)}${b.end-b.start<=30?' short':''}" role="button" tabindex="0" data-id="${esc(b.id)}" aria-label="${esc(b.title)}, ${fmt(b.start)} to ${fmt(b.end)}" style="top:${b.start/60*H}px;height:${Math.max(14,(b.end-b.start)/60*H-2)}px;left:calc(${b._c*100/b._n}% + 2px);width:calc(${100/b._n}% - 4px)"><div class="bt">${isRep(b)?'↻ ':''}${esc(b.title)}</div><div class="bm">${fmt(b.start)} – ${fmt(b.end)}</div><span class="rz" aria-hidden="true"></span></div>`).join('');
   $('day').innerHTML=`<div class="dayhead"><span class="hint">Drag on an empty slot to block time. Drag a block to move it, pull its bottom edge to resize, click it to edit.</span></div>
     <div class="scroll" id="scroll"><div class="tg"><div class="gut" style="height:${24*H}px">${labels}</div><div class="col" id="col" style="height:${24*H}px">${cur===TODAY?`<div class="now" id="nowline" style="top:${nm/60*H}px"></div>`:''}${blk}</div></div></div>`;
   const sc=$('scroll');
@@ -222,14 +227,14 @@ function renderDay(){
 function renderMonth(){
   const d=parse(cur),y=d.getFullYear(),m=d.getMonth();
   $('title').textContent=MONTHS[m]+' '+y;
-  const key=y+'-'+pad(m+1), mb=blocks.filter(b=>b.date.startsWith(key));
+  const mb=[];for(let dd=1;dd<=new Date(y,m+1,0).getDate();dd++){const k=y+'-'+pad(m+1)+'-'+pad(dd);blocks.forEach(b=>{if(onDay(b,k))mb.push(b)})}
   $('hint').textContent=mb.length?mb.length+' block'+(mb.length>1?'s':'')+' · '+dur(mb.reduce((a,b)=>a+(b.end-b.start),0)):'No blocks this month';
   const off=(new Date(y,m,1).getDay()+6)%7, days=new Date(y,m+1,0).getDate(), total=Math.ceil((off+days)/7)*7;
   let h=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div class="dow">${x}</div>`).join('');
   for(let i=0;i<total;i++){
     const dt=new Date(y,m,1-off+i), k=iso(dt), out=dt.getMonth()!==m;
-    const ps=blocks.filter(b=>b.date===k).sort((a,b)=>a.start-b.start);
-    h+=`<div class="cell${out?' out':''}${k===TODAY?' today':''}" role="button" tabindex="0" data-date="${k}" aria-label="${esc(longDate(k))}, ${ps.length} blocks"><span class="n">${dt.getDate()}</span>${ps.slice(0,3).map(b=>`<div class="chip c-${esc(b.color)}" data-id="${esc(b.id)}" title="${esc(b.title)} · ${fmt(b.start)} – ${fmt(b.end)}">${fmt(b.start).replace(' ','').toLowerCase()} ${esc(b.title)}</div>`).join('')}${ps.length>3?`<span class="more">+${ps.length-3} more</span>`:''}</div>`;
+    const ps=blocks.filter(b=>onDay(b,k)).sort((a,b)=>a.start-b.start);
+    h+=`<div class="cell${out?' out':''}${k===TODAY?' today':''}" role="button" tabindex="0" data-date="${k}" aria-label="${esc(longDate(k))}, ${ps.length} blocks"><span class="n">${dt.getDate()}</span>${ps.slice(0,3).map(b=>`<div class="chip c-${esc(b.color)}" data-id="${esc(b.id)}" title="${esc(b.title)} · ${fmt(b.start)} – ${fmt(b.end)}">${fmt(b.start).replace(' ','').toLowerCase()} ${isRep(b)?'↻ ':''}${esc(b.title)}</div>`).join('')}${ps.length>3?`<span class="more">+${ps.length-3} more</span>`:''}</div>`;
   }
   $('month').innerHTML=`<div class="mgrid">${h}</div>`;
 }
@@ -245,26 +250,31 @@ document.addEventListener('keydown',e=>{
     if(t.classList&&t.classList.contains('blk')){e.preventDefault();const b=blocks.find(x=>x.id===t.dataset.id);if(b)openForm(b)}
     else if(t.classList&&t.classList.contains('cell')){e.preventDefault();goDay(t.dataset.date)}}});
 
-function openForm(b){
-  const isNew=!b.id; let color=b.color||'lav';
+function openForm(b,occ){
+  const isNew=!b.id; let color=b.color||'lav'; occ=occ||cur;
   openModal(`<h2 id="mt">${isNew?'New time block':'Edit time block'}</h2>
   <form id="f">
     <label>What is it<input type="text" name="title" value="${esc(b.title||'')}" placeholder="Deep work, gym, call…" required></label>
     <div class="frow"><label>Date<input type="date" name="date" value="${esc(b.date||cur)}" required></label>
       <label>Start<input type="time" name="start" step="900" value="${mm(b.start)}" required></label>
       <label>End<input type="time" name="end" step="900" value="${mm(b.end)}" required></label></div>
+    <div class="frow2"><label>Repeat<select name="repeat" id="rep">${Object.entries(REP).map(([k,v])=>`<option value="${k}"${k===(b.repeat||'none')?' selected':''}>${v}</option>`).join('')}</select></label>
+      <label id="untilw"${isRep(b)?'':' hidden'}>Repeat until (optional)<input type="date" name="until" value="${esc(b.until||'')}"></label></div>
     <div><div class="hint" style="margin-bottom:6px">Colour</div><div class="sws" id="sws">${Object.entries(COLORS).map(([k,v])=>`<button type="button" class="sw c-${k}" data-c="${k}" aria-label="${v}" aria-pressed="${k===color}"></button>`).join('')}</div></div>
     <label>Notes<textarea name="notes" rows="3">${esc(b.notes||'')}</textarea></label>
     <div class="err" id="err" role="alert"></div>
-    <div class="fact">${isNew?'':'<button type="button" class="btn danger" id="del">Delete</button>'}<button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div>
+    <div class="fact">${isNew?'':`<button type="button" class="btn danger" id="del">${isRep(b)?'Delete all':'Delete'}</button>`}${!isNew&&isRep(b)?'<button type="button" class="btn" id="skip">Skip this day</button>':''}<button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div>
   </form>`);
   $('sws').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;color=s.dataset.c;$('sws').querySelectorAll('.sw').forEach(x=>x.setAttribute('aria-pressed',x===s))});
   $('cancel').onclick=closeModal;
+  $('rep').onchange=()=>{$('untilw').hidden=$('rep').value==='none'};
+  if($('skip'))$('skip').onclick=async()=>{if(await saveBlock(b.id,{...strip(b),skip:[...(b.skip||[]),occ]})){closeModal();toast('Skipped '+longDate(occ))}};
   if(!isNew)$('del').onclick=async()=>{if(await removeBlock(b.id)){closeModal();toast('Block deleted')}};
   $('f').addEventListener('submit',async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
     const s=toMin(d.start),en=toMin(d.end);
     if(en<=s){$('err').textContent='The end time needs to be after the start time.';return}
-    const rec={title:d.title.trim(),date:d.date,start:s,end:en,color,notes:d.notes,sample:false,created:b.created||Date.now()};
+    if(d.repeat!=='none'&&d.until&&d.until<d.date){$('err').textContent='The repeat end date needs to be on or after the start date.';return}
+    const rec={title:d.title.trim(),date:d.date,start:s,end:en,color,notes:d.notes,repeat:d.repeat,until:d.repeat==='none'?'':(d.until||''),skip:b.skip||[],sample:false,created:b.created||Date.now()};
     if(await saveBlock(b.id,rec)){cur=rec.date;closeModal();renderAll();toast('Saved')}});
 }
 function openNew(start,end,date){openForm({date:date||cur,start:Math.max(0,Math.min(start,1440-MINLEN)),end:Math.min(1440,Math.max(end,start+MINLEN))})}
@@ -327,7 +337,7 @@ function startBlockDrag(e,el){
 function goDay(date){cur=date;mode='day';needScroll=true;renderAll()}
 $('month').addEventListener('click',e=>{
   const chip=e.target.closest('.chip');
-  if(chip){const b=blocks.find(x=>x.id===chip.dataset.id);if(b)openForm(b);return}
+  if(chip){const b=blocks.find(x=>x.id===chip.dataset.id);if(b)openForm(b,chip.closest('.cell').dataset.date);return}
   const cell=e.target.closest('.cell');if(cell)goDay(cell.dataset.date);
 });
 function shiftMonth(n){const d=parse(cur),t=new Date(d.getFullYear(),d.getMonth()+n,1),last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(d.getDate(),last));cur=iso(t)}
