@@ -143,24 +143,6 @@ svg{display:block;width:100%;height:auto}
 input[type=text],input[type=date],input[type=time],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;min-width:0;width:100%}
 .add input,.add select{width:auto}
 
-.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
-@media (max-width:820px){.duo{grid-template-columns:minmax(0,1fr)}}
-.rows{display:flex;flex-direction:column;margin-top:8px}
-.item{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.item .txt{flex:1;min-width:0;overflow-wrap:anywhere}
-.item.done .txt{text-decoration:line-through;color:var(--muted)}
-.tick{width:28px;height:28px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent-ink);display:grid;place-items:center;flex:none;padding:0;font-size:15px;line-height:1}
-.tick[aria-pressed="true"]{background:var(--accent)}
-.week{display:flex;gap:4px;margin-top:5px}
-.week i{width:10px;height:10px;border-radius:50%;background:var(--surface2);border:1px solid var(--line)}
-.week i.on{background:var(--accent);border-color:var(--accent)}
-.streak{font-size:12px;color:var(--muted);white-space:nowrap}
-.x{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;padding:4px 8px;border-radius:8px}
-.x:hover{background:var(--surface2)}
-.ms .when,.win .d,.due{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.tag{font-size:11px;border-radius:999px;padding:1px 8px;display:inline-block;margin-right:6px}
-.sum{font-size:13px;color:var(--muted)}
 /* Modal */
 .ov{position:fixed;inset:0;background:rgba(40,28,60,.45);display:grid;place-items:center;padding:16px;z-index:50}
 .ov[hidden]{display:none}
@@ -177,7 +159,7 @@ input[type=text],input[type=date],input[type=time],input[type=number],select,tex
 <div class="wrap">
   <header class="head">
     <div>
-      <div class="eyebrow">Content diary · my new chapter</div>
+      <div class="eyebrow">Instagram planner</div>
       <h1>Content <em>Hub</em></h1>
     </div>
     <div class="muted" id="today-label"></div>
@@ -190,23 +172,6 @@ input[type=text],input[type=date],input[type=time],input[type=number],select,tex
   <div class="banner" id="status-note" hidden></div>
 
   <section class="kpis" id="kpis" aria-label="Instagram snapshot"></section>
-
-  <div class="duo">
-    <section class="card" aria-label="Daily habits">
-      <div class="eyebrow">Small habits</div>
-      <h2>Today</h2>
-      <div class="sum" id="habit-sum"></div>
-      <div class="rows" id="habits"></div>
-      <form class="add" id="habit-form"><input type="text" id="habit-title" placeholder="Add a tiny daily habit…" aria-label="New habit" required><button class="btn primary" type="submit">Add habit</button></form>
-    </section>
-    <section class="card" aria-label="This week's next steps">
-      <div class="eyebrow">Next steps</div>
-      <h2>This week</h2>
-      <div class="sum" id="step-sum"></div>
-      <div class="rows" id="steps"></div>
-      <form class="add" id="step-form"><input type="text" id="step-title" placeholder="One clear thing to do…" aria-label="New step" required><input type="date" id="step-due" aria-label="Due date"><button class="btn primary" type="submit">Add step</button></form>
-    </section>
-  </div>
 
   <div class="main">
     <section class="card" aria-label="Content calendar">
@@ -263,21 +228,6 @@ input[type=text],input[type=date],input[type=time],input[type=number],select,tex
     </div>
   </section>
 
-  <div class="duo">
-    <section class="card" aria-label="Milestones">
-      <div class="eyebrow">Timeline</div>
-      <h2>Milestones</h2>
-      <div class="rows" id="milestones"></div>
-      <form class="add" id="ms-form"><input type="text" id="ms-title" placeholder="A milestone to reach…" aria-label="Milestone" required><input type="date" id="ms-date" aria-label="Target date" required><select id="ms-area" aria-label="Area"></select><button class="btn primary" type="submit">Add</button></form>
-    </section>
-    <section class="card" aria-label="Wins">
-      <div class="eyebrow">Weekly check-in</div>
-      <h2>Wins worth noting</h2>
-      <form class="add" id="win-form"><input type="text" id="win-text" placeholder="What went well today or this week?" aria-label="New win" required><button class="btn primary" type="submit">Log win</button></form>
-      <div class="rows" id="wins"></div>
-    </section>
-  </div>
-
   <section class="card" aria-label="Idea bank">
     <div class="eyebrow">Idea bank</div>
     <h2>Ideas waiting for a date</h2>
@@ -296,7 +246,7 @@ input[type=text],input[type=date],input[type=time],input[type=number],select,tex
 
 <script>
 (function(){
-const PILLARS={educational:'VA tips',bts:'My journey',lifestyle:'Lifestyle reset',promo:'Services & offers',community:'Community'};
+const PILLARS={educational:'Educational',bts:'Behind the scenes',lifestyle:'Lifestyle',promo:'Promo',community:'Community'};
 const FORMATS=['Reel','Carousel','Story','Photo'];
 const STATUSES=['Idea','Drafted','Scheduled','Posted'];
 const METRICS={followers:{label:'Followers',fmt:v=>v.toLocaleString('en-US')},reach:{label:'Reach',fmt:v=>v.toLocaleString('en-US')},engagement:{label:'Engagement rate',fmt:v=>v.toFixed(1)+'%'}};
@@ -311,7 +261,7 @@ const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
 const longDate=s=>parse(s).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 const shortDate=s=>parse(s).toLocaleDateString('en-US',{month:'short',day:'numeric'});
 
-let db=null, posts=[], ideas=[], goals=[], stats=[], habits=[], steps=[], milestones=[], wins=[];
+let db=null, posts=[], ideas=[], goals=[], stats=[];
 let view={y:now.getFullYear(),m:now.getMonth()}, selected=TODAY, metric='followers';
 
 $('today-label').textContent=longDate(TODAY);
@@ -340,8 +290,8 @@ function listen(name,set){
 function showNote(t){const n=$('status-note');n.textContent=t;n.hidden=!t}
 
 /* ---------- render ---------- */
-function renderAll(){renderKpis();renderCal();renderDay();renderGoals();renderMetricTabs();renderChart();renderMix();renderIdeas();renderHabits();renderSteps();renderMilestones();renderWins();
-  $('sample-banner').hidden=![...posts,...ideas,...goals,...stats,...habits,...steps,...milestones,...wins].some(x=>x.sample)}
+function renderAll(){renderKpis();renderCal();renderDay();renderGoals();renderMetricTabs();renderChart();renderMix();renderIdeas();
+  $('sample-banner').hidden=![...posts,...ideas,...goals,...stats].some(x=>x.sample)}
 
 function sortedStats(){return [...stats].sort((a,b)=>a.date<b.date?-1:1)}
 function renderKpis(){
@@ -452,41 +402,6 @@ function renderIdeas(){
     :'<div class="empty" style="grid-column:1/-1">No ideas yet. Type one above and it lands here until you give it a date.</div>';
 }
 
-/* ---------- habits, steps, milestones, wins ---------- */
-const AREAS={va:['VA business','educational'],life:['Lifestyle','lifestyle'],abroad:['Move abroad','community']};
-$('ms-area').innerHTML=opts(Object.entries(AREAS).map(([k,v])=>[k,v[0]]));
-function lastDays(n){const out=[];for(let i=n-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);out.push(iso(d.getFullYear(),d.getMonth(),d.getDate()))}return out}
-function streak(h){const dn=h.done||{};const d=new Date();if(!dn[iso(d.getFullYear(),d.getMonth(),d.getDate())])d.setDate(d.getDate()-1);let n=0;while(dn[iso(d.getFullYear(),d.getMonth(),d.getDate())]){n++;d.setDate(d.getDate()-1)}return n}
-function renderHabits(){
-  const hs=habits.slice().sort((a,b)=>(a.created||0)-(b.created||0));
-  const n=hs.filter(h=>(h.done||{})[TODAY]).length;
-  $('habit-sum').textContent=hs.length?n+' of '+hs.length+' done today':'';
-  $('habits').innerHTML=hs.length?hs.map(h=>{const dn=h.done||{},on=!!dn[TODAY],s=streak(h);
-    return `<div class="item"><button type="button" class="tick" data-act="toggle-habit" data-id="${esc(h.id)}" aria-pressed="${on}" aria-label="Mark ${esc(h.title)} done today">${on?'✓':''}</button><div class="txt"><div>${esc(h.title)}</div><div class="week" aria-hidden="true">${lastDays(7).map(d=>`<i class="${dn[d]?'on':''}"></i>`).join('')}</div></div><span class="streak">${s} day${s===1?'':'s'}</span><button type="button" class="x" data-act="del-habit" data-id="${esc(h.id)}" aria-label="Delete habit">×</button></div>`}).join(''):'<div class="empty">Start with one habit so small it feels silly, like “drink water after waking up”.</div>';
-}
-function renderSteps(){
-  const ss=steps.slice().sort((a,b)=>(!!a.done-!!b.done)||((a.created||0)-(b.created||0)));
-  const n=ss.filter(s=>s.done).length;
-  $('step-sum').textContent=ss.length?n+' of '+ss.length+' done':'';
-  $('steps').innerHTML=ss.length?ss.map(s=>`<div class="item${s.done?' done':''}"><button type="button" class="tick" data-act="toggle-step" data-id="${esc(s.id)}" aria-pressed="${!!s.done}" aria-label="Mark ${esc(s.title)} done">${s.done?'✓':''}</button><div class="txt">${esc(s.title)}${s.due?` <span class="due">· ${esc(shortDate(s.due))}</span>`:''}</div><button type="button" class="x" data-act="del-step" data-id="${esc(s.id)}" aria-label="Delete step">×</button></div>`).join(''):'<div class="empty">Add the next two or three things only. Short lists get done.</div>';
-}
-function when_(m){if(m.done)return 'Done';const d=Math.round((parse(m.date)-parse(TODAY))/864e5);if(d<0)return Math.abs(d)+' days overdue';if(d===0)return 'Today';if(d<60)return 'in '+d+' days';return 'in '+Math.round(d/30)+' months'}
-function renderMilestones(){
-  const ms=milestones.slice().sort((a,b)=>a.date<b.date?-1:1);
-  $('milestones').innerHTML=ms.length?ms.map(m=>{const a=AREAS[m.area]||AREAS.va;
-    return `<div class="item ms${m.done?' done':''}"><button type="button" class="tick" data-act="toggle-ms" data-id="${esc(m.id)}" aria-pressed="${!!m.done}" aria-label="Mark ${esc(m.title)} reached">${m.done?'✓':''}</button><div class="txt"><div>${esc(m.title)}</div><div><span class="tag p-${a[1]}">${a[0]}</span><span class="when">${esc(longDateY(m.date))} · ${esc(when_(m))}</span></div></div><button type="button" class="x" data-act="del-ms" data-id="${esc(m.id)}" aria-label="Delete milestone">×</button></div>`}).join(''):'<div class="empty">Map the big moments from now to your first clients and, later, the move abroad.</div>';
-}
-function longDateY(s){return parse(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
-function renderWins(){
-  const ws=wins.slice().sort((a,b)=>a.date===b.date?(b.created||0)-(a.created||0):(a.date<b.date?1:-1));
-  $('wins').innerHTML=ws.length?ws.map(w=>`<div class="item win"><div class="txt"><div>${esc(w.text)}</div><div class="d">${esc(longDateY(w.date))}</div></div><button type="button" class="x" data-act="del-win" data-id="${esc(w.id)}" aria-label="Delete win">×</button></div>`).join(''):'<div class="empty">Log one thing that went well. Small wins count, especially while building a new routine.</div>';
-}
-function onAdd(formId,fn){$(formId).addEventListener('submit',async e=>{e.preventDefault();if(await fn()){e.target.reset();toast('Added')}})}
-onAdd('habit-form',()=>save('habits',null,{title:$('habit-title').value.trim(),done:{},sample:false,created:Date.now()}));
-onAdd('step-form',()=>save('steps',null,{title:$('step-title').value.trim(),due:$('step-due').value||'',done:false,sample:false,created:Date.now()}));
-onAdd('ms-form',()=>save('milestones',null,{title:$('ms-title').value.trim(),date:$('ms-date').value,area:$('ms-area').value,done:false,sample:false,created:Date.now()}));
-onAdd('win-form',()=>save('wins',null,{text:$('win-text').value.trim(),date:TODAY,sample:false,created:Date.now()}));
-
 /* ---------- modal ---------- */
 let onEsc=null;
 function openModal(html){ $('modal').innerHTML=html; $('ov').hidden=false; const f=$('modal').querySelector('input,select,textarea'); if(f) f.focus(); }
@@ -556,15 +471,8 @@ document.addEventListener('click',async e=>{
   if(act==='metric'){metric=el.dataset.k;renderMetricTabs();return renderChart()}
   if(act==='schedule'){const i=ideas.find(x=>x.id===id); if(i) postForm({title:i.title,pillar:i.pillar,format:i.format,status:'Drafted',date:selected,caption:i.notes||''},{fromIdea:i.id}); return}
   if(act==='del-idea'){ if(await remove('ideas',id)) toast('Idea deleted'); return }
-  if(act==='toggle-habit'){const h=habits.find(x=>x.id===id);if(h){const dn={...(h.done||{})};if(dn[TODAY])delete dn[TODAY];else dn[TODAY]=true;await save('habits',id,{...strip(h),done:dn})}return}
-  if(act==='toggle-step'){const s=steps.find(x=>x.id===id);if(s)await save('steps',id,{...strip(s),done:!s.done});return}
-  if(act==='toggle-ms'){const m=milestones.find(x=>x.id===id);if(m){await save('milestones',id,{...strip(m),done:!m.done});if(!m.done)toast('Milestone reached. Nice work.')}return}
-  if(act==='del-habit'){await remove('habits',id);return}
-  if(act==='del-step'){await remove('steps',id);return}
-  if(act==='del-ms'){await remove('milestones',id);return}
-  if(act==='del-win'){await remove('wins',id);return}
   if(act==='clear-sample'){
-    const all=[['posts',posts],['ideas',ideas],['goals',goals],['stats',stats],['habits',habits],['steps',steps],['milestones',milestones],['wins',wins]];
+    const all=[['posts',posts],['ideas',ideas],['goals',goals],['stats',stats]];
     await Promise.all(all.flatMap(([c,a])=>a.filter(x=>x.sample).map(x=>remove(c,x.id)))); toast('Sample data cleared'); return }
 });
 document.addEventListener('change',async e=>{
@@ -582,7 +490,7 @@ renderAll();
   const timer=setTimeout(()=>showNote('Still loading your plan. If this stays, the data may be out of date.'),10000);
   let first=true; const done=()=>{if(first){first=false;clearTimeout(timer);showNote('')}};
   const wrap=(n,set)=>db.collection(n).onSnapshot(s=>{done();set(s.docs.map(d=>({id:d.id,...d.data()})));renderAll()},e=>{clearTimeout(timer);showNote('Live updates stopped ('+(e&&e.code||'error')+'). Reload to reconnect.')});
-  wrap('posts',a=>posts=a);wrap('ideas',a=>ideas=a);wrap('goals',a=>goals=a);wrap('stats',a=>stats=a);wrap('habits',a=>habits=a);wrap('steps',a=>steps=a);wrap('milestones',a=>milestones=a);wrap('wins',a=>wins=a);
+  wrap('posts',a=>posts=a);wrap('ideas',a=>ideas=a);wrap('goals',a=>goals=a);wrap('stats',a=>stats=a);
 })();
 })();
 </script>
