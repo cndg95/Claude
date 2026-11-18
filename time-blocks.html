@@ -125,6 +125,7 @@ input[type=text],input[type=date],input[type=time],select,textarea{border:1px so
         <button type="button" data-act="mode" data-m="day" id="m-day">Day</button>
         <button type="button" data-act="mode" data-m="month" id="m-month">Month</button>
       </div>
+      <button class="btn" type="button" data-act="export" id="exp" hidden>Phone reminders</button>
       <button class="btn primary" type="button" data-act="new">+ New block</button>
     </div>
   </header>
@@ -344,6 +345,7 @@ function shiftMonth(n){const d=parse(cur),t=new Date(d.getFullYear(),d.getMonth(
 document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-act]');if(!el)return;
   const a=el.dataset.act;
+  if(a==='export')return openExport();
   if(a==='mode'){mode=el.dataset.m;needScroll=true;return renderAll()}
   if(a==='prev'){if(mode==='day'){cur=addDays(cur,-1);needScroll=true}else shiftMonth(-1);return renderAll()}
   if(a==='next'){if(mode==='day'){cur=addDays(cur,1);needScroll=true}else shiftMonth(1);return renderAll()}
@@ -352,10 +354,50 @@ document.addEventListener('click',async e=>{
   if(a==='clear-sample'){await Promise.all(blocks.filter(b=>b.sample).map(b=>removeBlock(b.id)));toast('Sample blocks cleared')}
 });
 
+/* ---------- calendar export (phone reminders) ---------- */
+let dl=null;
+const ics=s=>String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+function fold(l){const o=[];while(l.length>60){o.push(l.slice(0,60));l=' '+l.slice(60)}o.push(l);return o.join('\r\n')}
+function stampOf(d,m){const dt=parse(d);if(m>=1440){dt.setDate(dt.getDate()+1);m-=1440}return iso(dt).replace(/-/g,'')+'T'+pad(Math.floor(m/60))+pad(m%60)+'00'}
+function firstDay(b){let k=b.date;if(b.repeat==='weekdays'){for(let i=0;i<7;i++){const w=parse(k).getDay();if(w>0&&w<6)break;k=addDays(k,1)}}return k}
+function buildIcs(){
+  const n=new Date(),st=n.getUTCFullYear()+pad(n.getUTCMonth()+1)+pad(n.getUTCDate())+'T'+pad(n.getUTCHours())+pad(n.getUTCMinutes())+pad(n.getUTCSeconds())+'Z';
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Time Blocks//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  blocks.forEach(b=>{
+    const d0=isRep(b)?firstDay(b):b.date;
+    L.push('BEGIN:VEVENT','UID:'+b.id+'@timeblocks','DTSTAMP:'+st,'DTSTART:'+stampOf(d0,b.start),'DTEND:'+stampOf(d0,b.end),'SUMMARY:'+ics(b.title));
+    if(b.notes)L.push('DESCRIPTION:'+ics(b.notes));
+    if(isRep(b)){
+      let r=b.repeat==='daily'?'FREQ=DAILY':b.repeat==='weekdays'?'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR':'FREQ=WEEKLY';
+      if(b.until)r+=';UNTIL='+stampOf(b.until,1439);
+      L.push('RRULE:'+r);
+      (b.skip||[]).filter(k=>k>=d0).forEach(k=>L.push('EXDATE:'+stampOf(k,b.start)));
+    }
+    L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+ics(b.title),'TRIGGER:-PT10M','END:VALARM','END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n')+'\r\n';
+}
+function openExport(){
+  openModal(`<h2 id="mt">Reminders on your phone</h2>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;font-size:14px">
+    <p style="margin:0">This saves your ${blocks.length} block${blocks.length===1?'':'s'}, with repeats, as a calendar file. Each one gets an alert 10 minutes before it starts.</p>
+    <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px"><li>Tap <b>Save calendar file</b> and accept the prompt.</li><li>Open the saved file in the Files app and rename it from <b>.txt</b> to <b>.ics</b>.</li><li>Tap the renamed file and choose <b>Add All</b> to put it in your Calendar.</li></ol>
+    <p class="hint" style="margin:0">When you change your schedule, repeat these steps. Each event keeps the same ID, so Calendar usually updates it instead of adding a copy.</p>
+  </div>
+  <div class="fact"><button type="button" class="btn" id="xc">Close</button><button type="button" class="btn primary" id="xs">Save calendar file</button></div>`);
+  $('xc').onclick=closeModal;
+  $('xs').onclick=async()=>{
+    try{await dl.save({filename:'time-blocks-calendar.txt',data:buildIcs()});closeModal();toast('Saved. Now rename it to .ics in Files.')}
+    catch(e){if(!e||e.code!=='declined')toast('Could not save the file here.')}
+  };
+}
+
 /* ---------- boot ---------- */
 renderAll();
 (async()=>{
   const c=window.claude;if(!c||!c.use){showNote('Open this page in Claude to save your schedule.');return}
+  c.use('downloads').then(d=>{dl=d;$('exp').hidden=!d}).catch(()=>{});
   db=await c.use('db');
   if(!db){showNote('Sign in to load and save your schedule.');return}
   const timer=setTimeout(()=>showNote('Still loading your schedule. If this stays, the data may be out of date.'),10000);
